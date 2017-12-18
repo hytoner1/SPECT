@@ -80,27 +80,27 @@ classdef detectorRig < handle
         %%
         function back_project(obj, data)
             if nargin < 2
-                data = obj.data_filt;
+                data = obj.data_derectified;
             end
             
             imS = 100;
             obj.bp_im = zeros(imS);
                         
-            for i =  1 : obj.N-20
-                for j = i+1 : obj.N
+            for i =  1 : obj.N
+                for j = 1 : obj.N-2
                     xi = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     xj = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
-                        (cos((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                        (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
                     yi = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     yj = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
-                        (sin((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                        (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
                     maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
                     
@@ -108,12 +108,16 @@ classdef detectorRig < handle
                         round(linspace(yi,yj,maxDiff))]';
                     asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
                     
-                    obj.bp_im(asd) = obj.bp_im(asd) + data(i,j);
+                    obj.bp_im(asd) = obj.bp_im(asd) + data(i, 1+mod(i+j-1, obj.N));
+                    
+                    
                 end
+                imagesc(obj.bp_im)
+                drawnow;
             end
         end % back_project()
         
-
+        %%
         function rectify_data(obj)
             obj.data_rectified = zeros(obj.N, obj.N);
             for i = 2:obj.N
