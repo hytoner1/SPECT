@@ -21,16 +21,14 @@ figure;
     
     
 %%
-dR.rectify_data();
 dR.filter();
-dR.derectify_data();
 
 figure;
     imagesc(dR.data_filt)
 
 %%
 
-dR.back_project(dR.data_derectified);
+dR.back_project(dR.data_filt);
 
 figure;
     imagesc(dR.bp_im );

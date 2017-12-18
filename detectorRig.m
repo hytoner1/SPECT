@@ -53,11 +53,6 @@ classdef detectorRig < handle
             if detectors(2) < 0
                 detectors(2) = obj.N+detectors(2);
             end
-            %if detectors(1) > detectors(2)
-             %   tmp = detectors(2);
-              %  detectors(2) = detectors(1);
-               % detectors(1) = tmp;
-            %end
             
             obj.data(detectors(1)+1, detectors(2)+1) = ...
                 obj.data(detectors(1)+1, detectors(2)+1) + 1;
@@ -67,8 +62,12 @@ classdef detectorRig < handle
         end
         
         %%
-        function filter(obj)
-            fdata = fftshift(fft(obj.data_rectified, [], 2), 2);
+        function filter(obj, data)
+            if nargin < 2
+                data = obj.data;
+            end
+            
+            fdata = fftshift(fft(data, [], 2), 2);
             h = abs( linspace(-1,1,obj.N) );
                 h = repmat(h, [obj.N, 1]);
             
