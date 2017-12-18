@@ -1,8 +1,10 @@
 
 
 dR = detectorRig(5, 200);
-locs = rand(1000,2) .* 4 - 2;
-phis = rand(1000,1) .* pi;
+locs = rand(1e5,2) .* 4 - 2;
+phis = rand(1e5,1) .* pi;
+% locs = zeros(1000, 2);
+% phis = linspace(0,2*pi,1000);
 
 figure; 
     scatter(locs(:,1), locs(:,2),'.');
@@ -17,11 +19,17 @@ end
 figure;
     imagesc(dR.data)
     
+    
 %%
 
-dR.back_project();
-
-%%
+dR.filter();
 
 figure;
-    imagesc(sqrt(dR.bp_im));
+    imagesc(dR.data_filt)
+
+%%
+
+dR.back_project(dR.data_filt);
+
+figure;
+    imagesc(dR.bp_im);

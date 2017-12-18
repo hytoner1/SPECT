@@ -4,10 +4,13 @@ classdef detectorRig < handle
         r;
         N;
         data;
+        data_filt;
         bp_im;
     end
     
+    %%
     methods
+        %%
         function obj = detectorRig(r,N)
             if r > 0
                 obj.r = r;
@@ -16,10 +19,15 @@ classdef detectorRig < handle
                 obj.N = N;
             end
             
-            obj.data = zeros(N, N);
+            obj.initData
         end
         
+        %%
+        function initData(obj)
+            obj.data = zeros(obj.N, obj.N);
+        end
         
+        %%
         function detectEmission(obj, loc, theta)
             k = tan(theta);
             b = loc(2) - k*loc(1);
@@ -35,7 +43,7 @@ classdef detectorRig < handle
             obj.update_data( detectors );
         end
 
-        
+        %%
         function update_data(obj, detectors)
             if detectors(1) < 0
                 detectors(1) = obj.N+detectors(1);
@@ -43,19 +51,28 @@ classdef detectorRig < handle
             if detectors(2) < 0
                 detectors(2) = obj.N+detectors(2);
             end
+            if detectors(1) > detectors(2)
+                tmp = detectors(2);
+                detectors(2) = detectors(1);
+                detectors(1) = tmp;
+            end
             
             obj.data(detectors(1)+1, detectors(2)+1) = ...
                 obj.data(detectors(1)+1, detectors(2)+1) + 1;
         end
         
-        
-        function back_project(obj)
+        %%
+        function back_project(obj, data)
+            if nargin < 2
+                data = obj.data_filt;
+            end
+            
             imS = 100;
             obj.bp_im = zeros(imS);
                         
             for i =  1 : obj.N-20
-                for j = i+19 : obj.N
-                    if(obj.data(i,j) > 0)
+                for j = i+1 : obj.N
+                    if(data(i,j) > 0)
                         xi = 1 + round((imS-1) *...
                             (obj.r + ( obj.r *...
                             (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
@@ -70,18 +87,35 @@ classdef detectorRig < handle
                             (obj.r + ( obj.r *...
                             (sin((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
                         
-                        maxDiff = max(abs(xi-xj), abs(yi-yj));
+                        maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
+                        
                         asd = [round(linspace(xi,xj,maxDiff));...
                             round(linspace(yi,yj,maxDiff))]';
+                        asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
                         
-                        obj.bp_im(asd(:,1), asd(:,2)) =...
-                            obj.bp_im(asd(:,1), asd(:,2)) + 1;
+                        obj.bp_im(asd) = obj.bp_im(asd) + data(i,j);
+                        
                     end
                 end
             end
+        end % back_project()
+        
+        %%
+        function filter(obj)
+            fdata = fftshift(fft(obj.data, [], 1), 1);
+            size(fdata)
+            h = abs( linspace(-1,1,obj.N) );
+            size(h)
+                h = repmat(h, [obj.N, 1]);
+            size(h)
+            
+            fdata_filt = ifftshift( fdata .* h, 1 );
+            obj.data_filt = real( ifft(fdata_filt, [], 1) );
+            
         end
         
-    end
+        
+    end % methods
     
     
     
