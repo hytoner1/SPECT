@@ -21,15 +21,16 @@ figure;
     
     
 %%
-
+dR.rectify_data();
 dR.filter();
+dR.derectify_data();
 
 figure;
     imagesc(dR.data_filt)
 
 %%
 
-dR.back_project(dR.data_filt);
+dR.back_project(dR.data_derectified);
 
 figure;
     imagesc(dR.bp_im );
@@ -39,5 +40,5 @@ figure;
     ax.YTick = 0:10:100;
         ax.YTickLabel = -5 : 1 : 5;
         
-    rectangle('Position', [30,30,40,40])
+    %rectangle('Position', [30,30,40,40])
     

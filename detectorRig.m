@@ -5,6 +5,8 @@ classdef detectorRig < handle
         N;
         data;
         data_filt;
+        data_rectified;
+        data_derectified
         bp_im;
     end
     
@@ -51,27 +53,27 @@ classdef detectorRig < handle
             if detectors(2) < 0
                 detectors(2) = obj.N+detectors(2);
             end
-            if detectors(1) > detectors(2)
-                tmp = detectors(2);
-                detectors(2) = detectors(1);
-                detectors(1) = tmp;
-            end
+            %if detectors(1) > detectors(2)
+             %   tmp = detectors(2);
+              %  detectors(2) = detectors(1);
+               % detectors(1) = tmp;
+            %end
             
             obj.data(detectors(1)+1, detectors(2)+1) = ...
                 obj.data(detectors(1)+1, detectors(2)+1) + 1;
+            obj.data(detectors(2)+1, detectors(1)+1) = ...
+                obj.data(detectors(2)+1, detectors(1)+1) + 1;
+
         end
         
         %%
         function filter(obj)
-            fdata = fftshift(fft(obj.data', [], 1), 1);
-            size(fdata)
+            fdata = fftshift(fft(obj.data_rectified, [], 2), 2);
             h = abs( linspace(-1,1,obj.N) );
-            size(h)
                 h = repmat(h, [obj.N, 1]);
-            size(h)
             
-            fdata_filt = ifftshift(fdata .* h, 1);
-            obj.data_filt = real( ifft(fdata_filt, [], 1) );
+            fdata_filt = ifftshift(fdata .* h, 2);
+            obj.data_filt = real( ifft(fdata_filt, [], 2) );
             
         end
         
@@ -112,6 +114,19 @@ classdef detectorRig < handle
         end % back_project()
         
 
+        function rectify_data(obj)
+            obj.data_rectified = zeros(obj.N, obj.N);
+            for i = 2:obj.N
+                obj.data_rectified(i,:) = circshift(obj.data(i,:), -(i-1));
+            end
+        end
+        
+        function derectify_data(obj)
+            obj.data_derectified = zeros(obj.N, obj.N);
+            for i = 2:obj.N
+                obj.data_derectified(i,:) = circshift(obj.data_filt(i,:), i-1);
+            end
+        end
         
     end % methods
     
