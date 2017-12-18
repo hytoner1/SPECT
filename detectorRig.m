@@ -62,6 +62,20 @@ classdef detectorRig < handle
         end
         
         %%
+        function filter(obj)
+            fdata = fftshift(fft(obj.data', [], 1), 1);
+            size(fdata)
+            h = abs( linspace(-1,1,obj.N) );
+            size(h)
+                h = repmat(h, [obj.N, 1]);
+            size(h)
+            
+            fdata_filt = ifftshift(fdata .* h, 1);
+            obj.data_filt = real( ifft(fdata_filt, [], 1) );
+            
+        end
+        
+        %%
         function back_project(obj, data)
             if nargin < 2
                 data = obj.data_filt;
@@ -72,48 +86,32 @@ classdef detectorRig < handle
                         
             for i =  1 : obj.N-20
                 for j = i+1 : obj.N
-                    if(data(i,j) > 0)
-                        xi = 1 + round((imS-1) *...
-                            (obj.r + ( obj.r *...
-                            (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                        xj = 1 + round((imS-1) *...
-                            (obj.r + ( obj.r *...
-                            (cos((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                        
-                        yi = 1 + round((imS-1) *...
-                            (obj.r + ( obj.r *...
-                            (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                        yj = 1 + round((imS-1) *...
-                            (obj.r + ( obj.r *...
-                            (sin((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                        
-                        maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
-                        
-                        asd = [round(linspace(xi,xj,maxDiff));...
-                            round(linspace(yi,yj,maxDiff))]';
-                        asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
-                        
-                        obj.bp_im(asd) = obj.bp_im(asd) + data(i,j);
-                        
-                    end
+                    xi = 1 + round((imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    xj = 1 + round((imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (cos((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    
+                    yi = 1 + round((imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    yj = 1 + round((imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (sin((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    
+                    maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
+                    
+                    asd = [round(linspace(xi,xj,maxDiff));...
+                        round(linspace(yi,yj,maxDiff))]';
+                    asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
+                    
+                    obj.bp_im(asd) = obj.bp_im(asd) + data(i,j);
                 end
             end
         end % back_project()
         
-        %%
-        function filter(obj)
-            fdata = fftshift(fft(obj.data, [], 1), 1);
-            size(fdata)
-            h = abs( linspace(-1,1,obj.N) );
-            size(h)
-                h = repmat(h, [obj.N, 1]);
-            size(h)
-            
-            fdata_filt = ifftshift( fdata .* h, 1 );
-            obj.data_filt = real( ifft(fdata_filt, [], 1) );
-            
-        end
-        
+
         
     end % methods
     

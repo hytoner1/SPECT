@@ -32,4 +32,12 @@ figure;
 dR.back_project(dR.data_filt);
 
 figure;
-    imagesc(dR.bp_im);
+    imagesc(dR.bp_im );
+    ax = gca;
+    ax.XTick = 0:10:100;
+        ax.XTickLabel = -5 : 1 : 5;
+    ax.YTick = 0:10:100;
+        ax.YTickLabel = -5 : 1 : 5;
+        
+    rectangle('Position', [30,30,40,40])
+    
