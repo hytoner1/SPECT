@@ -1,7 +1,7 @@
 
 
 dR = detectorRig(5, 200);
-locs = rand(1e5,2) .* 4 - 2;
+locs = rand(1e5,2) .* 2 - 1;
 phis = rand(1e5,1) .* pi;
 % locs = zeros(1000, 2);
 % phis = linspace(0,2*pi,1000);
@@ -27,7 +27,7 @@ figure;
     imagesc(dR.data_filt)
 
 %%
-
+% TODO: Add option to use either (f)BP, unit matrix inv or lapl. inv
 dR.back_project(dR.data_filt);
 
 figure;

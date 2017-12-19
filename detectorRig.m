@@ -73,11 +73,26 @@ classdef detectorRig < handle
             
             fdata_filt = ifftshift(fdata .* h, 2);
             obj.data_filt = real( ifft(fdata_filt, [], 2) );
+
+            
             
         end
         
         %%
         function back_project(obj, data)
+            % TODO: Add option to use either (f)BP, unit matrix inv or lapl. inv
+
+%             tau = 1e5;
+%             ATA = A2*A2';
+%             A_inv = pinv(ATA + tau.*eye(size(ATA))) * A2;
+
+%             tau_L = 1e0;
+%             H = [0.5,1,0.5;1,-6,1;0.5,1,0.5]; % Convolution
+%             T = convmtx2(H,size(img_smaller));% Corresponding matrix
+% 
+%             A_inv = pinv(ATA + full(tau_L.*T'*T)) * A2;
+            
+
             if nargin < 2
                 data = obj.data_derectified;
             end
