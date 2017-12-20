@@ -21,23 +21,17 @@ figure;
     
     
 %%
-dR.filter();
-
-figure;
-    imagesc(dR.data_filt)
-
-%%
-% TODO: Add option to use either (f)BP, unit matrix inv or lapl. inv
 opt.method = 'unit';
-dR.back_project();
+opt.imS = 50;
+dR.back_project(opt);
 
 figure;
     imagesc(dR.bp_im );
     ax = gca;
-    ax.XTick = 0:10:100;
-        ax.XTickLabel = -5 : 1 : 5;
-    ax.YTick = 0:10:100;
-        ax.YTickLabel = -5 : 1 : 5;
+    ax.XTick = linspace(0, size(dR.bp_im,1), 11);
+        ax.XTickLabel = linspace(-dR.r, dR.r, 11);
+    ax.YTick = linspace(0, size(dR.bp_im,1), 11);
+        ax.YTickLabel = linspace(-dR.r, dR.r, 11);
         
     %rectangle('Position', [30,30,40,40])
     
