@@ -28,7 +28,8 @@ figure;
 
 %%
 % TODO: Add option to use either (f)BP, unit matrix inv or lapl. inv
-dR.back_project(dR.data_filt);
+opt.method = 'unit';
+dR.back_project();
 
 figure;
     imagesc(dR.bp_im );

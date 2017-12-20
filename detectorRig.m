@@ -79,56 +79,64 @@ classdef detectorRig < handle
         end
         
         %%
-        function back_project(obj, data)
-            % TODO: Add option to use either (f)BP, unit matrix inv or lapl. inv
-
-%             tau = 1e5;
-%             ATA = A2*A2';
-%             A_inv = pinv(ATA + tau.*eye(size(ATA))) * A2;
-
-%             tau_L = 1e0;
-%             H = [0.5,1,0.5;1,-6,1;0.5,1,0.5]; % Convolution
-%             T = convmtx2(H,size(img_smaller));% Corresponding matrix
-% 
-%             A_inv = pinv(ATA + full(tau_L.*T'*T)) * A2;
-            
-
-            if nargin < 2
-                data = obj.data_derectified;
+        function back_project(obj, opt)
+            % TODO: Add option to use either (f)BP
+                
+            if nargin == 2 && isfield(opt, 'method') && strcmp(opt.method, 'unit')
+                tau = 1e5;
+                ATA = obj.data * obj.data';
+                obj.data_filt = pinv(ATA + tau.*eye(size(ATA))) * obj.data;
+                %TODO: Fixaa
+            elseif nargin == 2 && isfield(opt, 'method') && strcmp(opt.method, 'laplace')
+                tau_L = 1e0;
+                ATA = obj.data * obj.data';
+                H = [0.5,1,0.5;1,-6,1;0.5,1,0.5];  % Convolution
+                T = convmtx2(H, size(img_smaller)); % Corresponding matrix
+                obj.bp_im = pinv(ATA + full(tau_L.*T'*T)) * obj.data;
+            elseif nargin == 2 && isfield(opt, 'method') && strcmp(opt.method, 'none')
+                obj.data_filt = obj.data;
+            else
+                obj.filter(obj.data);
             end
             
-            imS = 100;
-            obj.bp_im = zeros(imS);
-                        
-            for i =  1 : obj.N
-                for j = 1 : obj.N-2
-                    xi = 1 + round((imS-1) *...
-                        (obj.r + ( obj.r *...
-                        (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    xj = 1 + round((imS-1) *...
-                        (obj.r + ( obj.r *...
-                        (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
-                    
-                    yi = 1 + round((imS-1) *...
-                        (obj.r + ( obj.r *...
-                        (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    yj = 1 + round((imS-1) *...
-                        (obj.r + ( obj.r *...
-                        (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
-                    
-                    maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
-                    
-                    asd = [round(linspace(xi,xj,maxDiff));...
-                        round(linspace(yi,yj,maxDiff))]';
-                    asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
-                    
-                    obj.bp_im(asd) = obj.bp_im(asd) + data(i, 1+mod(i+j-1, obj.N));
-                    
-                    
+                if nargin == 2 && isfield(opt, 'imS')
+                    imS = opt.imS;
+                else
+                    imS = 100;
                 end
-                imagesc(obj.bp_im)
-                drawnow;
-            end
+
+                obj.bp_im = zeros(imS);
+                
+                
+                for i =  1 : obj.N
+                    for j = 1 : obj.N-2
+                        xi = 1 + round((imS-1) *...
+                            (obj.r + ( obj.r *...
+                            (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                        xj = 1 + round((imS-1) *...
+                            (obj.r + ( obj.r *...
+                            (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
+                        
+                        yi = 1 + round((imS-1) *...
+                            (obj.r + ( obj.r *...
+                            (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                        yj = 1 + round((imS-1) *...
+                            (obj.r + ( obj.r *...
+                            (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
+                        
+                        maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
+                        
+                        asd = [round(linspace(xi,xj,maxDiff));...
+                            round(linspace(yi,yj,maxDiff))]';
+                        asd = sub2ind([imS, imS], asd(:,1), asd(:,2));
+                        
+                        obj.bp_im(asd) = obj.bp_im(asd) + obj.data_filt(i, 1+mod(i+j-1, obj.N));
+                        
+                        
+                    end
+                    imagesc(obj.bp_im)
+                    drawnow;
+                end
         end % back_project()
         
         %%
