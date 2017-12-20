@@ -1,8 +1,9 @@
 
 
 dR = detectorRig(5, 200);
-locs = rand(1e5,2) .* 2 - 1;
-phis = rand(1e5,1) .* pi;
+% locs = rand(1e4,2) .* [2,1]- 0.5;
+% locs = [locs; rand(1e4,2) .* [1, 2] - 0.5];
+% phis = rand(size(locs,1),1) .* pi;
 % locs = zeros(1000, 2);
 % phis = linspace(0,2*pi,1000);
 
@@ -12,8 +13,18 @@ figure;
    
 %%
     
-for i=1:size(locs,1)
-    dR.detectEmission(locs(i,:), phis(i))
+for i=1:1e5 %size(locs,1)
+    loc = rand(1,2) .* [2,1]- 0.5;
+    loc = [loc; rand(1,2) .* [1, 2] - 0.5];
+    phi = rand(1) .* pi;
+    
+    if rand(1) > 0.5
+        loc = loc(1,:);
+    else
+        loc = loc(2,:);
+    end
+    dR.detectEmission(loc, phi);
+%     dR.detectEmission(locs(i,:), phis(i))
 end
 
 figure;
@@ -22,7 +33,7 @@ figure;
     
 %%
 opt.method = 'unit';
-opt.imS = 50;
+opt.imS = 100;
 dR.back_project(opt);
 
 figure;

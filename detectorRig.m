@@ -5,9 +5,15 @@ classdef detectorRig < handle
         N;
         data;
         data_filt;
+        
         data_rectified;
         data_derectified
+        
         bp_im;
+        imS;
+        
+        emissionProbTbl
+        absCoeffTbl;
     end
     
     %%
@@ -21,13 +27,16 @@ classdef detectorRig < handle
                 obj.N = N;
             end
             
-            obj.initData
+            obj.data = zeros(obj.N, obj.N);
+            obj.data_filt = zeros(obj.N, obj.N);
+            
+            obj.imS = 100;
+
+            obj.absCoeffTbl = ones(obj.imS) .* 0;
+            obj.emissionProb();
+
         end
         
-        %%
-        function initData(obj)
-            obj.data = zeros(obj.N, obj.N);
-        end
         
         %%
         function detectEmission(obj, loc, theta)
@@ -54,11 +63,13 @@ classdef detectorRig < handle
                 detectors(2) = obj.N+detectors(2);
             end
             
-            obj.data(detectors(1)+1, detectors(2)+1) = ...
-                obj.data(detectors(1)+1, detectors(2)+1) + 1;
-            obj.data(detectors(2)+1, detectors(1)+1) = ...
-                obj.data(detectors(2)+1, detectors(1)+1) + 1;
-
+            if( rand(1) <= obj.emissionProbTbl(...
+                                    detectors(1)+1, detectors(2)+1 ) )
+                obj.data(detectors(1)+1, detectors(2)+1) = ...
+                    obj.data(detectors(1)+1, detectors(2)+1) + 1;
+                obj.data(detectors(2)+1, detectors(1)+1) = ...
+                    obj.data(detectors(2)+1, detectors(1)+1) + 1;
+            end
         end
         
         %%
@@ -79,20 +90,18 @@ classdef detectorRig < handle
         end
         
         %% 
-        function projectData(obj, data, imS)
-            for i =  1 : obj.N
-                for j = 1 : obj.N-2
-                    xi = 1 + round((imS.imS-1) *...
+        function [pixInd, dist] = pixBetwDet(obj, i, j, imS)
+                    xi = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    xj = 1 + round((imS.imS-1) *...
+                    xj = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
-                    yi = 1 + round((imS.imS-1) *...
+                    yi = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    yj = 1 + round((imS.imS-1) *...
+                    yj = 1 + round((imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
@@ -100,18 +109,15 @@ classdef detectorRig < handle
                     
                     pixSub = [round(linspace(xi,xj,maxDiff));...
                         round(linspace(yi,yj,maxDiff))]';
-                    pixInd = sub2ind([imS.imS, imS.imS],...
+                    pixInd = sub2ind([imS, imS],...
                         pixSub(:,1), pixSub(:,2));
                     
-                    obj.bp_im(pixInd ) = obj.bp_im(pixInd ) +...
-                        data(i, 1+mod(i+j-1, obj.N));
-                end
-            end
+                    dist = sqrt((xi-xj)^2 + (yi-yj)^2);
         end
         
         %%
         function back_project(obj, opt)
-            % TODO: Add option to use either (f)BP
+            
             if nargin < 2 || ~isfield(opt, 'method')
                 opt.method = '';
             end
@@ -127,12 +133,17 @@ classdef detectorRig < handle
             end
             
             if nargin < 2 || ~isfield(opt, 'imS')
-                opt.imS = 100;
+                opt.imS = obj.imS;
             end
             
             obj.bp_im = zeros(opt.imS);
-            obj.projectData(obj.data_filt, opt.imS);
-            
+            for i =  1 : obj.N
+                for j = 1 : obj.N-2
+                    pixInd = obj.pixBetwDet(i, j, opt.imS);
+                    obj.bp_im(pixInd) = obj.bp_im(pixInd ) +...
+                        obj.data_filt(i, 1+mod(i+j-1, obj.N));
+                end
+            end
         end % back_project()
         
         %%
@@ -151,11 +162,24 @@ classdef detectorRig < handle
         end
         
         %%
-        function prob = emissionProb(obj, loc)
+        function emissionProb(obj)
+            probTmp = nan(obj.N);
             
+            for i = 1 : obj.N-1
+                for j = i+1 : obj.N
+                    [pixInd, dist] = pixBetwDet(obj, i, j, obj.imS);
+                    probTmp(i,j) = exp(-1*...
+                        mean(obj.absCoeffTbl(pixInd)) * (dist/obj.imS*2*obj.r));
+                end
+            end
             
+            obj.emissionProbTbl = triu(probTmp) + triu(probTmp)';
+            obj.emissionProbTbl( isnan(obj.emissionProbTbl) ) = 0;
             
         end
+        
+
+        
     end % methods
     
     
