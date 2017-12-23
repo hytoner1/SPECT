@@ -7,9 +7,9 @@ dR = detectorRig(5, 200);
 % locs = zeros(1000, 2);
 % phis = linspace(0,2*pi,1000);
 
-figure; 
-    scatter(locs(:,1), locs(:,2),'.');
-    viscircles([0,0], dR.r);
+% figure; 
+%     scatter(locs(:,1), locs(:,2),'.');
+%     viscircles([0,0], dR.r);
    
 %%
     
@@ -23,8 +23,9 @@ for i=1:1e5 %size(locs,1)
     else
         loc = loc(2,:);
     end
-    dR.detectEmission(loc, phi);
+    detectorPair = dR.detectEmission(loc, phi);
 %     dR.detectEmission(locs(i,:), phis(i))
+    
 end
 
 figure;

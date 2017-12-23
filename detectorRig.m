@@ -5,6 +5,7 @@ classdef detectorRig < handle
         N;
         data;
         data_filt;
+        data_tof;
         
         data_rectified;
         data_derectified
@@ -39,7 +40,7 @@ classdef detectorRig < handle
         
         
         %%
-        function detectEmission(obj, loc, theta)
+        function successFlag = detectEmission(obj, loc, theta)
             k = tan(theta);
             b = loc(2) - k*loc(1);
 
@@ -51,11 +52,14 @@ classdef detectorRig < handle
             
             detectors = floor(angles ./ (2*pi/(obj.N)));
             
-            obj.update_data( detectors );
+            detectors = obj.update_data( detectors );
+            if sum(detectors) ~= 0
+                obj.detecTimeOfFlight(detectors, loc);
+            end
         end
 
         %%
-        function update_data(obj, detectors)
+        function detectors = update_data(obj, detectors)
             if detectors(1) < 0
                 detectors(1) = obj.N+detectors(1);
             end
@@ -69,6 +73,7 @@ classdef detectorRig < handle
                     obj.data(detectors(1)+1, detectors(2)+1) + 1;
                 obj.data(detectors(2)+1, detectors(1)+1) = ...
                     obj.data(detectors(2)+1, detectors(1)+1) + 1;
+                detectors = [0,0];
             end
         end
         
@@ -179,6 +184,13 @@ classdef detectorRig < handle
         end
         
 
+        %%
+        function detecTimeOfFlight(obj, detectors, loc)
+            c = 2.998e8; % m/s
+            
+            
+            
+        end
         
     end % methods
     
