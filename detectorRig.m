@@ -11,6 +11,7 @@ classdef detectorRig < handle
         data_derectified
         
         bp_im;
+        tof_im;
         imS;
         
         emissionProbTbl
@@ -35,12 +36,15 @@ classdef detectorRig < handle
 
             obj.absCoeffTbl = ones(obj.imS) .* 0;
             obj.emissionProb();
+            
+            obj.data_tof = cell(obj.N);
+
 
         end
         
         
         %%
-        function successFlag = detectEmission(obj, loc, theta)
+        function detectEmission(obj, loc, theta)
             k = tan(theta);
             b = loc(2) - k*loc(1);
 
@@ -73,6 +77,7 @@ classdef detectorRig < handle
                     obj.data(detectors(1)+1, detectors(2)+1) + 1;
                 obj.data(detectors(2)+1, detectors(1)+1) = ...
                     obj.data(detectors(2)+1, detectors(1)+1) + 1;
+            else
                 detectors = [0,0];
             end
         end
@@ -95,18 +100,19 @@ classdef detectorRig < handle
         end
         
         %% 
-        function [pixInd, dist] = pixBetwDet(obj, i, j, imS)
-                    xi = 1 + round((imS-1) *...
+        function [pixInd, dist] = pixBetwDet(obj, i, j)
+                
+                    xi = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
                         (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    xj = 1 + round((imS-1) *...
+                    xj = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
                         (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
-                    yi = 1 + round((imS-1) *...
+                    yi = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
-                    yj = 1 + round((imS-1) *...
+                    yj = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
                     
@@ -114,7 +120,7 @@ classdef detectorRig < handle
                     
                     pixSub = [round(linspace(xi,xj,maxDiff));...
                         round(linspace(yi,yj,maxDiff))]';
-                    pixInd = sub2ind([imS, imS],...
+                    pixInd = sub2ind([obj.imS, obj.imS],...
                         pixSub(:,1), pixSub(:,2));
                     
                     dist = sqrt((xi-xj)^2 + (yi-yj)^2);
@@ -137,14 +143,14 @@ classdef detectorRig < handle
                 obj.filter(obj.data);
             end
             
-            if nargin < 2 || ~isfield(opt, 'imS')
-                opt.imS = obj.imS;
+            if nargin == 2 && isfield(opt, 'imS')
+                obj.imS = opt.imS;
             end
             
             obj.bp_im = zeros(opt.imS);
             for i =  1 : obj.N
                 for j = 1 : obj.N-2
-                    pixInd = obj.pixBetwDet(i, j, opt.imS);
+                    pixInd = obj.pixBetwDet(i, j);
                     obj.bp_im(pixInd) = obj.bp_im(pixInd ) +...
                         obj.data_filt(i, 1+mod(i+j-1, obj.N));
                 end
@@ -188,9 +194,59 @@ classdef detectorRig < handle
         function detecTimeOfFlight(obj, detectors, loc)
             c = 2.998e8; % m/s
             
+            xd = 1 + round((obj.imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (cos((detectors-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    
+            yd = 1 + round((obj.imS-1) *...
+                        (obj.r + ( obj.r *...
+                        (sin((detectors-1)/obj.N * 2*pi)) ))/(2*obj.r));
+                    
+            det_loc = [xd(1), yd(1); xd(2), yd(2)] .* (2*obj.r / obj.imS) - obj.r;
+            
+            dists = (det_loc - loc).^2;
+                dists = sqrt( dists(:,1) + dists(:,2) );
+            
+            tof = dists ./ (100*c); % s
+            
+            obj.data_tof{detectors(1)+1, detectors(2)+1} = cat(1,...
+                    obj.data_tof{detectors(1)+1, detectors(2)+1},  tof(1));
+            obj.data_tof{detectors(2)+1, detectors(1)+1} = cat(1,...
+                    obj.data_tof{detectors(2)+1, detectors(1)+1},  tof(2));
+        end % detectTimeOfFlight
+        
+        
+        %% 
+        function reconstructTimeOfFlight(obj)
+            obj.tof_im = zeros(obj.imS, obj.imS);
+            
+            for i = 1 : obj.N-1
+                for j = i+1 : obj.N
+                    if ~isempty( obj.data_tof(i,j) )
+                        
+                        if i == 79 && j==199
+                            
+                        
+                        pixInd = obj.pixBetwDet(i, j)
+                        
+                        ratios = obj.data_tof{i,j} ./...
+                            (obj.data_tof{i,j} + obj.data_tof{j,i})
+                        
+                        pixels = pixInd( round(length(pixInd) .* ratios) )
+                        
+                        obj.tof_im(pixels) = obj.tof_im(pixels) + 1;
+                        end
+                    end                    
+                end
+            end
             
             
-        end
+            
+        end % reconstructTimeOfFlight
+        
+        
+        
+        
         
     end % methods
     
@@ -199,3 +255,27 @@ classdef detectorRig < handle
     
     
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -23,7 +23,7 @@ for i=1:1e5 %size(locs,1)
     else
         loc = loc(2,:);
     end
-    detectorPair = dR.detectEmission(loc, phi);
+    dR.detectEmission(loc, phi);
 %     dR.detectEmission(locs(i,:), phis(i))
     
 end
@@ -33,7 +33,7 @@ figure;
     
     
 %%
-opt.method = 'unit';
+opt.method = '';
 opt.imS = 100;
 dR.back_project(opt);
 
@@ -47,3 +47,14 @@ figure;
         
     %rectangle('Position', [30,30,40,40])
     
+%%
+
+dR.reconstructTimeOfFlight();
+
+figure; 
+    imagesc( dR.tof_im );
+    ax = gca;
+    ax.XTick = linspace(0, size(dR.tof_im,1), 11);
+        ax.XTickLabel = linspace(-dR.r, dR.r, 11);
+    ax.YTick = linspace(0, size(dR.tof_im,1), 11);
+        ax.YTickLabel = linspace(-dR.r, dR.r, 11);
