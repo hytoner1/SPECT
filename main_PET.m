@@ -58,3 +58,22 @@ figure;
         ax.XTickLabel = linspace(-dR.r, dR.r, 11);
     ax.YTick = linspace(0, size(dR.tof_im,1), 11);
         ax.YTickLabel = linspace(-dR.r, dR.r, 11);
+        
+        
+        
+        
+%% test
+
+im = zeros(100);
+figure;
+for i=1:200
+    im = zeros(100);
+    for j=1:200
+        pI = dR.pixBetwDet(i,j);
+        im(pI) = 1;
+        
+    end
+    imagesc(im);
+    pause(0.2);
+end
+

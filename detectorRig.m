@@ -107,14 +107,14 @@ classdef detectorRig < handle
                         (cos((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     xj = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
-                        (cos((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
+                        (cos((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     
                     yi = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
                         (sin((i-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     yj = 1 + round((obj.imS-1) *...
                         (obj.r + ( obj.r *...
-                        (sin((1+mod(i+j-1, obj.N))/obj.N * 2*pi)) ))/(2*obj.r));
+                        (sin((j-1)/obj.N * 2*pi)) ))/(2*obj.r));
                     
                     maxDiff = max(abs(xi-xj), abs(yi-yj)) +1 ;
                     
@@ -152,7 +152,7 @@ classdef detectorRig < handle
                 for j = 1 : obj.N-2
                     pixInd = obj.pixBetwDet(i, j);
                     obj.bp_im(pixInd) = obj.bp_im(pixInd ) +...
-                        obj.data_filt(i, 1+mod(i+j-1, obj.N));
+                        obj.data_filt(i, j);
                 end
             end
         end % back_project()
@@ -224,18 +224,14 @@ classdef detectorRig < handle
                 for j = i+1 : obj.N
                     if ~isempty( obj.data_tof(i,j) )
                         
-                        if i == 79 && j==199
-                            
-                        
-                        pixInd = obj.pixBetwDet(i, j)
+                        pixInd = obj.pixBetwDet(i, j);
                         
                         ratios = obj.data_tof{i,j} ./...
-                            (obj.data_tof{i,j} + obj.data_tof{j,i})
+                            (obj.data_tof{i,j} + obj.data_tof{j,i});
                         
-                        pixels = pixInd( round(length(pixInd) .* ratios) )
+                        pixels = pixInd( round(length(pixInd) .* ratios) );
                         
                         obj.tof_im(pixels) = obj.tof_im(pixels) + 1;
-                        end
                     end                    
                 end
             end
