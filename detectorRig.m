@@ -217,7 +217,7 @@ classdef detectorRig < handle
         
         
         %% 
-        function reconstructTimeOfFlight(obj)
+        function reconstructTimeOfFlight(obj, accuracy)
             obj.tof_im = zeros(obj.imS, obj.imS);
             
             for i = 1 : obj.N-1
