@@ -178,7 +178,7 @@ classdef detectorRig < handle
             
             for i = 1 : obj.N-1
                 for j = i+1 : obj.N
-                    [pixInd, dist] = pixBetwDet(obj, i, j, obj.imS);
+                    [pixInd, dist] = pixBetwDet(obj, i, j);
                     probTmp(i,j) = exp(-1*...
                         mean(obj.absCoeffTbl(pixInd)) * (dist/obj.imS*2*obj.r));
                 end
@@ -218,6 +218,9 @@ classdef detectorRig < handle
         
         %% 
         function reconstructTimeOfFlight(obj, accuracy)
+            % Accuracy in seconds, tells how reliable the data_tof is
+            
+            
             obj.tof_im = zeros(obj.imS, obj.imS);
             
             for i = 1 : obj.N-1
@@ -226,10 +229,13 @@ classdef detectorRig < handle
                         
                         pixInd = obj.pixBetwDet(i, j);
                         
-                        ratios = obj.data_tof{i,j} ./...
+                        ratios_low = (obj.data_tof{i,j} - accuracy )./...
+                            (obj.data_tof{i,j} + obj.data_tof{j,i});
+                        ratios_high= (obj.data_tof{i,j} + accuracy )./...
                             (obj.data_tof{i,j} + obj.data_tof{j,i});
                         
-                        pixels = pixInd( round(length(pixInd) .* ratios) );
+                        pixels = pixInd( round(length(pixInd) .* ratios_low) :...
+                            round(length(pixInd) .* ratios_high) );
                         
                         obj.tof_im(pixels) = obj.tof_im(pixels) + 1;
                     end                    

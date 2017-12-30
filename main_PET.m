@@ -49,7 +49,7 @@ figure;
     
 %%
 
-dR.reconstructTimeOfFlight();
+dR.reconstructTimeOfFlight(1e-13);
 
 figure; 
     imagesc( dR.tof_im );
